@@ -51,10 +51,6 @@ fn part2(input: &str) -> i64{
         let mut slice = &batteries[..];
 
         for i in 0..12 {
-            if slice.is_empty(){
-                result_num.push(0);
-                continue;
-            }
 
             let mut max_x = -1;
             let mut max_x_index = 0;
