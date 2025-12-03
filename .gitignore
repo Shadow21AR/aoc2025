@@ -1,0 +1,12 @@
+/target/
+/*/target/
+Cargo.lock
+.vscode/
+*.code-workspace
+.idea/
+.DS_Store
+Thumbs.db
+/day*/input.txt
+**/input.txt
+*.swp
+*.swo
