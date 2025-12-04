@@ -1,16 +1,44 @@
 name: Update README ⭐
+
 on:
-  schedule:
-    - cron: "51 */4 * * *"
-  workflow_dispatch:
+  workflow_dispatch:          
+  push:                       
+    branches:
+      - main
 
 jobs:
   update-readme:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v3
+
+      # --- Cooldown check: max once per hour ---
+      - name: Check cooldown
+        id: cooldown
+        run: |
+          COOLDOWN_FILE=".github/.last_update"
+          if [ -f "$COOLDOWN_FILE" ]; then
+            LAST=$(cat $COOLDOWN_FILE)
+            NOW=$(date +%s)
+            DIFF=$((NOW - LAST))
+            echo "Last update: $DIFF seconds ago"
+
+            if [ $DIFF -lt 3600 ]; then
+              echo "cooldown=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+          echo "cooldown=false" >> $GITHUB_OUTPUT
+
+      - name: Stop job if cooldown active
+        if: steps.cooldown.outputs.cooldown == 'true' && github.event_name != 'workflow_dispatch'
+        run: |
+          echo "Cooldown active, aborting run."
+          exit 0
+
       - uses: k2bd/advent-readme-stars@v1
         with:
           userId: 2444556
@@ -18,6 +46,15 @@ jobs:
           sessionCookie: ${{ secrets.AOC_SESSION }}
           year: 2025
           starSymbol: 🦀
+
+      - name: Update cooldown timestamp
+        run: |
+          mkdir -p .github
+          date +%s > .github/.last_update
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Update README stars
+          file_pattern: |
+            README.md
+            .github/.last_update
